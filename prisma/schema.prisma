@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Player {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  bets Bet[]
+}
+
+// status: "PENDING" | "DRAWN" (SQLite has no native enum support)
+model Draw {
+  id             Int       @id @default(autoincrement())
+  status         String    @default("PENDING")
+  drawTime       DateTime
+  drawnAt        DateTime?
+  numbers        Json?
+  specialNumber  Int?
+  basePoolAmount Int
+  createdAt      DateTime  @default(now())
+  bets           Bet[]
+
+  @@index([status])
+}
+
+// prizeTier: "頭獎" | "貳獎" | "參獎" | "肆獎" | "伍獎" | "陸獎" | "普獎" | null
+model Bet {
+  id             Int      @id @default(autoincrement())
+  drawId         Int
+  draw           Draw     @relation(fields: [drawId], references: [id])
+  playerId       Int
+  player         Player   @relation(fields: [playerId], references: [id])
+  numbers        Json
+  betAt          DateTime @default(now())
+  matchedCount   Int?
+  matchedSpecial Boolean?
+  prizeTier      String?
+  prizeAmount    Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([drawId])
+  @@index([playerId])
+}
+
+// Singleton settings row (id always 1)
+model Settings {
+  id                Int @id @default(1)
+  betPrice          Int @default(50)
+  baseJackpotAmount Int @default(5000000)
+  prize2Amount      Int @default(3000000)
+  prize3Amount      Int @default(200000)
+  prize4Amount      Int @default(20000)
+  prize5Amount      Int @default(2000)
+  prize6Amount      Int @default(400)
+  prize7Amount      Int @default(400)
+}
