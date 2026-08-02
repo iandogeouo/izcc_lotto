@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { updateBetSchema } from "@/lib/validation";
+import { getSettings } from "@/lib/queries";
+import { updateBetSchema, validateNumbersWithinPool } from "@/lib/validation";
 
 export async function PATCH(
   request: Request,
@@ -22,6 +23,14 @@ export async function PATCH(
   }
   if (bet.draw.status !== "PENDING") {
     return NextResponse.json({ error: "此期已開獎，無法編輯下注" }, { status: 409 });
+  }
+
+  const settings = await getSettings();
+  if (!validateNumbersWithinPool(parsed.data.numbers, settings.numberPoolSize)) {
+    return NextResponse.json(
+      { error: `號碼不能超過 ${settings.numberPoolSize}` },
+      { status: 400 }
+    );
   }
 
   const updated = await prisma.bet.update({

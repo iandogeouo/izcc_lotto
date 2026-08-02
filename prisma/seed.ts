@@ -1,8 +1,10 @@
 import { prisma } from "../lib/prisma";
 import { generateDrawNumbers, getNextDrawTime, pickUniqueRandomNumbers } from "../lib/draw";
 import { executeDrawForRound } from "../lib/drawService";
+import { LOTTO_MIN_NUMBER } from "../lib/types";
 
 const PLAYER_NAMES = ["零小", "一小", "二小", "三小", "四小"];
+const NUMBER_POOL_SIZE = 20;
 
 async function main() {
   console.log("Seeding settings...");
@@ -11,6 +13,7 @@ async function main() {
     update: {},
     create: {
       id: 1,
+      numberPoolSize: NUMBER_POOL_SIZE,
       betPrice: 50,
       baseJackpotAmount: 5_000_000,
       prize2Amount: 3_000_000,
@@ -40,7 +43,7 @@ async function main() {
         data: {
           drawId,
           playerId: player.id,
-          numbers: pickUniqueRandomNumbers(6, 1, 49),
+          numbers: pickUniqueRandomNumbers(6, LOTTO_MIN_NUMBER, NUMBER_POOL_SIZE),
         },
       });
     }
@@ -62,7 +65,7 @@ async function main() {
 
   // Round 2（已開獎，埋一注保證中頭獎，示範獎池重置回底金）
   const draw2Id = result1.nextDrawId;
-  const plantedDraw = generateDrawNumbers();
+  const plantedDraw = generateDrawNumbers(NUMBER_POOL_SIZE);
   await addRandomBets(draw2Id, 17);
   await prisma.bet.create({
     data: { drawId: draw2Id, playerId: players[0].id, numbers: plantedDraw.numbers },

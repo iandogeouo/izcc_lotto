@@ -1,13 +1,16 @@
 "use client";
 
 import { pickUniqueRandomNumbers } from "@/lib/draw";
+import { LOTTO_MIN_NUMBER } from "@/lib/types";
 
 export function NumberPicker({
   selected,
   onChange,
+  maxNumber,
 }: {
   selected: number[];
   onChange: (numbers: number[]) => void;
+  maxNumber: number;
 }) {
   function toggle(n: number) {
     if (selected.includes(n)) {
@@ -19,8 +22,11 @@ export function NumberPicker({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-7 gap-2 sm:grid-cols-10">
-        {Array.from({ length: 49 }, (_, i) => i + 1).map((n) => {
+      <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-10 sm:gap-2">
+        {Array.from(
+          { length: maxNumber - LOTTO_MIN_NUMBER + 1 },
+          (_, i) => i + LOTTO_MIN_NUMBER
+        ).map((n) => {
           const isSelected = selected.includes(n);
           return (
             <button
@@ -28,10 +34,10 @@ export function NumberPicker({
               type="button"
               onClick={() => toggle(n)}
               disabled={!isSelected && selected.length >= 6}
-              className={`aspect-square rounded-md text-sm font-bold transition-colors ${
+              className={`aspect-square rounded-lg text-sm font-bold transition-all ${
                 isSelected
-                  ? "bg-blue-600 text-white"
-                  : "border border-black/10 hover:bg-black/5 disabled:opacity-30 dark:border-white/20 dark:hover:bg-white/10"
+                  ? "scale-105 bg-blue-600 text-white shadow-sm shadow-blue-600/30"
+                  : "border border-black/10 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-30 disabled:hover:border-black/10 disabled:hover:bg-transparent dark:border-white/20 dark:hover:bg-white/10"
               }`}
             >
               {n}
@@ -42,15 +48,15 @@ export function NumberPicker({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => onChange(pickUniqueRandomNumbers(6, 1, 49))}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+          onClick={() => onChange(pickUniqueRandomNumbers(6, LOTTO_MIN_NUMBER, maxNumber))}
+          className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-blue-700"
         >
-          隨機選號
+          🎲 隨機選號
         </button>
         <button
           type="button"
           onClick={() => onChange([])}
-          className="rounded-md border border-black/10 px-3 py-1.5 text-sm hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          className="rounded-lg border border-black/10 px-3 py-1.5 text-sm transition hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
         >
           清除
         </button>

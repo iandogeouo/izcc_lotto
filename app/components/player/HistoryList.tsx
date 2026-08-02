@@ -20,12 +20,12 @@ export function HistoryList({
   linkBase?: string;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 dark:border-white/10 p-5">
-      <h2 className="font-bold text-lg mb-4">歷史開獎紀錄</h2>
+    <div className="rounded-2xl border border-black/10 bg-card/70 p-5 shadow-sm dark:border-white/10 dark:bg-card/5">
+      <h2 className="mb-4 text-lg font-bold">🗓️ 歷史開獎紀錄</h2>
       {history.length === 0 ? (
         <p className="text-sm text-gray-500">尚無歷史開獎紀錄。</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-black/5 dark:divide-white/5">
           {history.map((draw) => {
             const content = (
               <div className="flex flex-wrap items-center gap-3">
@@ -46,14 +46,11 @@ export function HistoryList({
               </div>
             );
             return (
-              <li
-                key={draw.id}
-                className="border-b border-black/5 pb-3 last:border-0 last:pb-0 dark:border-white/5"
-              >
+              <li key={draw.id} className="py-3 first:pt-0 last:pb-0">
                 {linkBase ? (
                   <Link
                     href={`${linkBase}/${draw.id}`}
-                    className="block rounded-md -mx-2 px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5"
+                    className="-mx-2 block rounded-lg px-2 py-1 transition hover:bg-black/5 dark:hover:bg-white/5"
                   >
                     {content}
                   </Link>

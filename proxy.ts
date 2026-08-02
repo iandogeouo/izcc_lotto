@@ -6,10 +6,14 @@ const PUBLIC_ADMIN_PATHS = new Set(["/admin/login"]);
 // 只保護「會修改資料」的 API：讀取用的 GET 端點玩家頁面也需要用到，維持公開
 const PROTECTED_API_ROUTES: { pattern: RegExp; methods: string[] }[] = [
   { pattern: /^\/api\/bets$/, methods: ["POST"] },
+  { pattern: /^\/api\/bets\/random$/, methods: ["POST"] },
   { pattern: /^\/api\/bets\/[^/]+$/, methods: ["PATCH", "DELETE"] },
+  { pattern: /^\/api\/bets\/[^/]+\/claim$/, methods: ["PATCH"] },
   { pattern: /^\/api\/settings$/, methods: ["PATCH"] },
+  { pattern: /^\/api\/draws$/, methods: ["POST"] },
   { pattern: /^\/api\/draws\/[^/]+\/execute$/, methods: ["POST"] },
   { pattern: /^\/api\/draws\/[^/]+\/bets$/, methods: ["DELETE"] },
+  { pattern: /^\/api\/draws\/[^/]+\/claim-all$/, methods: ["PATCH"] },
 ];
 
 function isAuthed(request: NextRequest) {
@@ -39,5 +43,12 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/bets", "/api/bets/:path*", "/api/settings", "/api/draws/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/bets",
+    "/api/bets/:path*",
+    "/api/settings",
+    "/api/draws",
+    "/api/draws/:path*",
+  ],
 };

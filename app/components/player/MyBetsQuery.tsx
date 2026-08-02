@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { NumberBall } from "../shared/NumberBall";
+
+const POLL_INTERVAL_MS = 10000;
 
 interface PlayerOption {
   id: number;
@@ -36,9 +38,10 @@ export function MyBetsQuery({
   const [drawId, setDrawId] = useState<number>(defaultDrawId);
   const [bets, setBets] = useState<BetRecord[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadDraws() {
+  const loadDraws = useCallback(async () => {
+    try {
       const [history, current] = await Promise.all([
         fetch("/api/draws").then((r) => r.json()),
         fetch("/api/draws/current").then((r) => r.json()),
@@ -47,32 +50,58 @@ export function MyBetsQuery({
       if (current.draw) list.push(current.draw);
       list.sort((a, b) => b.id - a.id);
       setDraws(list);
+    } catch {
+      // 靜默失敗，等下一次輪詢再試
     }
-    loadDraws();
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fetch on mount
+    loadDraws();
+  }, [loadDraws]);
+
+  const loadBets = useCallback(async () => {
     if (!playerId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing results when the player selector is unset
       setBets(null);
       return;
     }
     setLoading(true);
-    fetch(`/api/bets?drawId=${drawId}&playerId=${playerId}`)
-      .then((r) => r.json())
-      .then((data) => setBets(data))
-      .finally(() => setLoading(false));
+    setLoadError(null);
+    try {
+      const data = await fetch(`/api/bets?drawId=${drawId}&playerId=${playerId}`).then((r) =>
+        r.json()
+      );
+      setBets(data.items);
+    } catch {
+      setLoadError("網路連線異常，請確認網路狀態後再試一次");
+    } finally {
+      setLoading(false);
+    }
   }, [playerId, drawId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard fetch-on-dependency-change (playerId/drawId) pattern
+    loadBets();
+  }, [loadBets]);
+
+  // 定時輪詢，讓其他人下注/開獎後的最新結果自動出現，不需要手動整頁重新整理
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadDraws();
+      loadBets();
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [loadDraws, loadBets]);
 
   const selectedDraw = draws.find((d) => d.id === drawId);
   const isDrawn = selectedDraw?.status === "DRAWN";
 
   return (
-    <div className="rounded-xl border border-black/10 dark:border-white/10 p-5 space-y-4">
-      <h2 className="font-bold text-lg">查詢我的下注</h2>
+    <div className="space-y-4 rounded-2xl border border-black/10 bg-card/70 p-5 shadow-sm dark:border-white/10 dark:bg-card/5">
+      <h2 className="text-lg font-bold">查詢我的下注</h2>
       <div className="flex flex-wrap gap-3">
         <select
-          className="rounded-md border border-black/10 bg-transparent px-3 py-2 dark:border-white/20"
+          className="rounded-lg border border-black/10 bg-card px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-white/20 dark:bg-black/20"
           value={playerId}
           onChange={(e) => setPlayerId(e.target.value ? Number(e.target.value) : "")}
         >
@@ -84,7 +113,7 @@ export function MyBetsQuery({
           ))}
         </select>
         <select
-          className="rounded-md border border-black/10 bg-transparent px-3 py-2 dark:border-white/20"
+          className="rounded-lg border border-black/10 bg-card px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-white/20 dark:bg-black/20"
           value={drawId}
           onChange={(e) => setDrawId(Number(e.target.value))}
         >
@@ -98,6 +127,12 @@ export function MyBetsQuery({
 
       {loading && <p className="text-sm text-gray-500">查詢中...</p>}
 
+      {loadError && (
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">
+          {loadError}
+        </p>
+      )}
+
       {!loading && playerId && bets && bets.length === 0 && (
         <p className="text-sm text-gray-500">這位玩家在此期沒有下注紀錄。</p>
       )}
@@ -107,7 +142,7 @@ export function MyBetsQuery({
           {bets.map((bet) => (
             <li
               key={bet.id}
-              className="space-y-2 rounded-lg border border-black/10 p-3 dark:border-white/10"
+              className="space-y-2 rounded-xl border border-black/10 p-3 dark:border-white/10"
             >
               <div className="flex flex-wrap gap-2">
                 {bet.numbers.map((n) => (

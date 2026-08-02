@@ -11,8 +11,8 @@ export function WinningNumbersCard({
   currentDraw: Draw;
 }) {
   return (
-    <div className="rounded-xl border border-black/10 dark:border-white/10 p-5 space-y-4">
-      <h2 className="font-bold text-lg">最新開獎結果</h2>
+    <div className="space-y-4 rounded-2xl border border-black/10 bg-card/70 p-5 shadow-sm dark:border-white/10 dark:bg-card/5">
+      <h2 className="text-lg font-bold">🎯 最新開獎結果</h2>
       {latestDrawn ? (
         <div className="space-y-2">
           <p className="text-sm text-gray-500">
@@ -29,7 +29,7 @@ export function WinningNumbersCard({
       ) : (
         <p className="text-gray-500">尚未有開獎紀錄</p>
       )}
-      <div className="border-t border-black/10 dark:border-white/10 pt-3 text-sm text-gray-500">
+      <div className="border-t border-black/10 pt-3 text-sm text-gray-500 dark:border-white/10">
         第 {currentDraw.id} 期尚未開獎，預計開獎時間：{formatDateTime(currentDraw.drawTime)}
       </div>
     </div>

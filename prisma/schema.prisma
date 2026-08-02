@@ -41,6 +41,7 @@ model Bet {
   matchedSpecial Boolean?
   prizeTier      String?
   prizeAmount    Int?
+  claimed        Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -51,6 +52,7 @@ model Bet {
 // Singleton settings row (id always 1)
 model Settings {
   id                Int @id @default(1)
+  numberPoolSize    Int @default(20)
   betPrice          Int @default(50)
   baseJackpotAmount Int @default(5000000)
   prize2Amount      Int @default(3000000)
